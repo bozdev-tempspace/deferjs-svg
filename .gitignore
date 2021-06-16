@@ -1,0 +1,6 @@
+.temp
+.vscode
+.DS_Store
+.cache
+.log
+.ini

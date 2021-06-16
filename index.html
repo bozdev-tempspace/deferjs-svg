@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>DEFERJS</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+  <svg data-src="assets/images/icons/feather/sprite.svg"></svg>
+  <svg><use href="#box"></use></svg>
+  <script src="assets/js/vendor/defer/defer.js"></script>
+  <script>
+    Defer.dom('svg', 0, 'loaded', function (element) {
+      var isSvg = document.createElementNS && document.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect;
+      var localStorage = false;
+      var file = element.getAttribute('data-src');
+      if (!file) return;
+      try {
+        localStorage = 'localStorage' in window && window['localStorage'] !== null ? window.localStorage : false;
+      } catch (e) { }
+      if (localStorage && !localStorage['defer.svg']) {
+        localStorage['defer.svg'] = JSON.stringify({});
+      }
+      var cache = {};
+      if (localStorage) {
+        Object.assign(cache, JSON.parse(localStorage.getItem('defer.svg')));
+      }
+      if (cache[file]) {
+        injectData(cache[file]);
+      } else {
+        var request = new XMLHttpRequest();
+        request.open('GET', file, true);
+        request.onreadystatechange = function (e) {
+          var data, localData;
+          if (request.readyState === 4 && request.status >= 200 && request.status < 400) {
+            injectData(data = request.responseText);
+            if (localStorage) {
+              localData = JSON.parse(localStorage.getItem('defer.svg'));
+              localData[file] = data;
+              localStorage.setItem('defer.svg', JSON.stringify(localData));
+            }
+            cache[file] = data;
+          }
+        };
+        request.send();
+      }
+
+      function injectData(data) {
+        var body = document.body;
+        body.insertAdjacentHTML('afterbegin', data);
+        element.remove();
+        if (body.firstChild.tagName === 'svg') {
+          body.firstChild.style.display = 'none';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
